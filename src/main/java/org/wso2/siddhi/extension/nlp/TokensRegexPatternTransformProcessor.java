@@ -36,6 +36,7 @@ import org.wso2.siddhi.core.executor.expression.ExpressionExecutor;
 import org.wso2.siddhi.core.query.processor.transform.TransformProcessor;
 import org.wso2.siddhi.query.api.definition.Attribute;
 import org.wso2.siddhi.query.api.definition.StreamDefinition;
+import org.wso2.siddhi.query.api.exception.AttributeNotExistException;
 import org.wso2.siddhi.query.api.expression.Expression;
 import org.wso2.siddhi.query.api.expression.Variable;
 import org.wso2.siddhi.query.api.expression.constant.StringConstant;
@@ -51,7 +52,10 @@ import java.util.*;
 public class TokensRegexPatternTransformProcessor extends TransformProcessor{
 
     private static Logger logger = Logger.getLogger(TokensRegexPatternTransformProcessor.class);
+    private static final String groupPrefix = "group_";
 
+    private int attributeCount;
+    private int inStreamParamPosition;
     private TokenSequencePattern regexPattern;
     private StanfordCoreNLP pipeline;
 
@@ -81,7 +85,10 @@ public class TokensRegexPatternTransformProcessor extends TransformProcessor{
             throw new QueryCreationException("Cannot parse given regex");
         }
 
-        if (!(expressions[1] instanceof Variable)){
+        if (expressions[1] instanceof Variable){
+            inStreamParamPosition = inStreamDefinition.getAttributePosition(((Variable)expressions[1])
+                    .getAttributeName());
+        }else{
             throw new QueryCreationException("Second parameter should be a variable");
         }
 
@@ -96,6 +103,11 @@ public class TokensRegexPatternTransformProcessor extends TransformProcessor{
             this.outStreamDefinition = new StreamDefinition().name("tokensRegexPatternMatchStream");
 
             this.outStreamDefinition.attribute("match", Attribute.Type.STRING);
+
+            attributeCount = regexPattern.getTotalGroups();
+            for (int i = 1; i < regexPattern.getTotalGroups(); i++){
+                this.outStreamDefinition.attribute(groupPrefix + i, Attribute.Type.STRING);
+            }
 
             for(Attribute strDef : inStreamDefinition.getAttributeList()) {
                 this.outStreamDefinition.attribute(strDef.getName(), strDef.getType());
@@ -112,7 +124,7 @@ public class TokensRegexPatternTransformProcessor extends TransformProcessor{
 
         Object [] inStreamData = inEvent.getData();
 
-        Annotation document = pipeline.process((String)inEvent.getData(1));
+        Annotation document = pipeline.process((String)inEvent.getData(inStreamParamPosition));
 
         InListEvent transformedListEvent = new InListEvent();
 
@@ -120,9 +132,20 @@ public class TokensRegexPatternTransformProcessor extends TransformProcessor{
             TokenSequenceMatcher matcher = regexPattern.getMatcher(sentence.get(CoreAnnotations.TokensAnnotation.class));
 
             while( matcher.find()){
-                Object [] outStreamData = new Object[inStreamData.length + 1];
+                Object [] outStreamData = new Object[inStreamData.length + attributeCount];
                 outStreamData[0] = matcher.group();
-                System.arraycopy(inStreamData, 0, outStreamData, 1, inStreamData.length);
+
+                int position;
+                for (int i = 1; i < (matcher.groupCount() + 1);i++){
+                    try {
+                        position = this.outStreamDefinition.getAttributePosition(groupPrefix + i);
+                        outStreamData[position] = matcher.group(i);
+                    } catch (AttributeNotExistException e) {
+                        //exception ignored
+                    }
+                }
+
+                System.arraycopy(inStreamData, 0, outStreamData, attributeCount, inStreamData.length);
                 transformedListEvent.addEvent(new InEvent(inEvent.getStreamId(), System.currentTimeMillis(),
                         outStreamData));
             }

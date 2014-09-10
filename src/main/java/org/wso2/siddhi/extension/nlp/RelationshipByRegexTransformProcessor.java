@@ -56,9 +56,9 @@ import java.util.regex.Pattern;
 public class RelationshipByRegexTransformProcessor extends TransformProcessor {
 
     private static Logger logger = Logger.getLogger(RelationshipByRegexTransformProcessor.class);
-//    private static final String validationRegex = "(\\s*=\\s*)(\\w+)";
     private static final String validationRegex = "(?:[{.*}]\\s*=\\s*)(\\w+)";
 
+    private int inStreamParamPosition;
     private SemgrexPattern regexPattern;
     private StanfordCoreNLP pipeline;
 
@@ -81,29 +81,6 @@ public class RelationshipByRegexTransformProcessor extends TransformProcessor {
             throw new QueryCreationException("Parameter regex should be of type string");
         }
 
-        List<String> namedNodeList = new ArrayList<String>();
-        Pattern validationPattern = Pattern.compile(validationRegex);
-        Matcher validationMatcher = validationPattern.matcher(regex);
-        while (validationMatcher.find()){
-            namedNodeList.add(validationMatcher.group(1).trim());
-        }
-
-        if (namedNodeList.size() < 3){
-            throw new QueryCreationException("Regex should contain 3 named nodes as subject, object and verb");
-        }
-
-        if (!namedNodeList.contains(Constants.subject)){
-            throw new QueryCreationException("Regex should contain a named node as subject");
-        }
-
-        if (!namedNodeList.contains(Constants.object)){
-            throw new QueryCreationException("Regex should contain a named node as object");
-        }
-
-        if (!namedNodeList.contains(Constants.verb)){
-            throw new QueryCreationException("Regex should contain a named node as verb");
-        }
-
         try {
             regexPattern = SemgrexPattern.compile(regex);
         } catch (SemgrexParseException e) {
@@ -111,9 +88,36 @@ public class RelationshipByRegexTransformProcessor extends TransformProcessor {
             throw new QueryCreationException("Cannot parse given regex");
         }
 
-        if (!(expressions[1] instanceof Variable)){
+        Set<String> namedNodeSet = new HashSet<String>();
+        Pattern validationPattern = Pattern.compile(validationRegex);
+        Matcher validationMatcher = validationPattern.matcher(regex);
+        while (validationMatcher.find()){
+            namedNodeSet.add(validationMatcher.group(1).trim());
+        }
+
+        if (namedNodeSet.size() < 3){
+            throw new QueryCreationException("Regex should contain 3 named nodes as subject, object and verb");
+        }
+
+        if (!namedNodeSet.contains(Constants.subject)){
+            throw new QueryCreationException("Regex should contain a named node as subject");
+        }
+
+        if (!namedNodeSet.contains(Constants.object)){
+            throw new QueryCreationException("Regex should contain a named node as object");
+        }
+
+        if (!namedNodeSet.contains(Constants.verb)){
+            throw new QueryCreationException("Regex should contain a named node as verb");
+        }
+
+        if (expressions[1] instanceof Variable){
+            inStreamParamPosition = inStreamDefinition.getAttributePosition(((Variable)expressions[1])
+                    .getAttributeName());
+        }else{
             throw new QueryCreationException("Second parameter should be a variable");
         }
+
 
         if (logger.isDebugEnabled()) {
             logger.debug(String.format("Query parameters initialized. Regex: %s Stream Parameters: %s", regex,
@@ -144,14 +148,14 @@ public class RelationshipByRegexTransformProcessor extends TransformProcessor {
 
         Object [] inStreamData = inEvent.getData();
 
-        SemgrexMatcher matcher;
-
-        Annotation document = pipeline.process((String)inEvent.getData(1));
+        Annotation document = pipeline.process((String)inEvent.getData(inStreamParamPosition));
 
         InListEvent transformedListEvent = new InListEvent();
 
+        SemgrexMatcher matcher;
+        SemanticGraph graph;
         for (CoreMap sentence:document.get(CoreAnnotations.SentencesAnnotation.class)){
-            SemanticGraph graph = sentence.get(SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class);
+            graph = sentence.get(SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class);
             matcher = regexPattern.matcher(graph);
 
             while(matcher.find()){

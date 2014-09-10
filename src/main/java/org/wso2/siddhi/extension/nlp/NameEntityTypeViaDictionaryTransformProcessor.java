@@ -47,6 +47,7 @@ public class NameEntityTypeViaDictionaryTransformProcessor extends TransformProc
 
     private static Logger logger = Logger.getLogger(NameEntityTypeTransformProcessor.class);
 
+    private int inStreamParamPosition;
     private Constants.EntityType entityType;
     private Dictionary dictionary;
 
@@ -91,7 +92,10 @@ public class NameEntityTypeViaDictionaryTransformProcessor extends TransformProc
             throw new QueryCreationException("Failed to initialize dictionary");
         }
 
-        if (!(expressions[2] instanceof Variable)){
+        if (expressions[2] instanceof Variable){
+            inStreamParamPosition = inStreamDefinition.getAttributePosition(((Variable)expressions[2])
+                    .getAttributeName());
+        }else{
             throw new QueryCreationException("Third parameter should be a variable");
         }
 
@@ -121,7 +125,7 @@ public class NameEntityTypeViaDictionaryTransformProcessor extends TransformProc
 
         Object [] inStreamData = inEvent.getData();
 
-        String text = (String)inEvent.getData(2);
+        String text = (String)inEvent.getData(inStreamParamPosition);
 
         InListEvent transformedListEvent = new InListEvent();
 

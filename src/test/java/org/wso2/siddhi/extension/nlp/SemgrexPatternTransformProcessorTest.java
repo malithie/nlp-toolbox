@@ -50,7 +50,7 @@ public class SemgrexPatternTransformProcessorTest extends TestCase {
         InputHandler inputHandler = siddhiManager.defineStream("define stream DataStream ( text string )");
 
         String queryReference = siddhiManager.addQuery("from DataStream#transform.nlp:findSemgrexPattern" +
-                "        ( '{} <nsubj {}', text ) \n" +
+                "        ( '({}=govenor >/.*subj|agent/=reln {}=dependent)', text ) \n" +
                 "        select *  \n" +
                 "        insert into FindSemgrexPatternResult;\n");
 

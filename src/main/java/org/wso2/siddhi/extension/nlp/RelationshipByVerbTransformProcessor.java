@@ -62,6 +62,7 @@ public class RelationshipByVerbTransformProcessor extends TransformProcessor {
     private static final String regexOptObj = "{lemma:%s}=verb >/nsubj|agent|xsubj/ {}=subject " +
             "?>/dobj|iobj|nsubjpass/ {}=object";
 
+    private int inStreamParamPosition;
     private SemgrexPattern regexOptSubPattern;
     private SemgrexPattern regexOptObjPattern;
     private String verb;
@@ -127,9 +128,13 @@ public class RelationshipByVerbTransformProcessor extends TransformProcessor {
         regexOptSubPattern = SemgrexPattern.compile(String.format(regexOptSub,verb));
         regexOptObjPattern = SemgrexPattern.compile(String.format(regexOptObj,verb));
 
-        if (!(expressions[1] instanceof Variable)){
+        if (expressions[1] instanceof Variable){
+            inStreamParamPosition = inStreamDefinition.getAttributePosition(((Variable)expressions[1])
+                    .getAttributeName());
+        }else{
             throw new QueryCreationException("Second parameter should be a variable");
         }
+
 
         if (logger.isDebugEnabled()) {
             logger.debug(String.format("Query parameters initialized. Verb: %s Stream Parameters: %s", verb,
@@ -159,7 +164,7 @@ public class RelationshipByVerbTransformProcessor extends TransformProcessor {
 
         Object [] inStreamData = inEvent.getData();
 
-        Annotation document = pipeline.process((String)inEvent.getData(1));
+        Annotation document = pipeline.process((String)inEvent.getData(inStreamParamPosition));
 
         InListEvent transformedListEvent = new InListEvent();
 

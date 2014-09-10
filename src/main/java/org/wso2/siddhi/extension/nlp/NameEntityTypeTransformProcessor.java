@@ -52,6 +52,7 @@ public class NameEntityTypeTransformProcessor extends TransformProcessor {
 
     private static Logger logger = Logger.getLogger(NameEntityTypeTransformProcessor.class);
 
+    private int inStreamParamPosition;
     private Constants.EntityType entityType;
     private boolean groupSuccessiveEntities;
     private StanfordCoreNLP pipeline;
@@ -89,7 +90,10 @@ public class NameEntityTypeTransformProcessor extends TransformProcessor {
             throw new QueryCreationException("Parameter groupSuccessiveEntities should be of type boolean");
         }
 
-        if (!(expressions[2] instanceof Variable)){
+        if (expressions[2] instanceof Variable){
+            inStreamParamPosition = inStreamDefinition.getAttributePosition(((Variable)expressions[2])
+                    .getAttributeName());
+        }else{
             throw new QueryCreationException("Third parameter should be a variable");
         }
 
@@ -121,7 +125,7 @@ public class NameEntityTypeTransformProcessor extends TransformProcessor {
 
         Object [] inStreamData = inEvent.getData();
 
-        Annotation document = new Annotation((String)inEvent.getData(2));
+        Annotation document = new Annotation((String)inEvent.getData(inStreamParamPosition));
         pipeline.annotate(document);
 
         InListEvent transformedListEvent = new InListEvent();

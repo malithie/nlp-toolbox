@@ -50,7 +50,7 @@ public class TokensRegexPatternTransformProcessorTest extends TestCase {
         InputHandler inputHandler = siddhiManager.defineStream("define stream DataStream ( text string )");
 
         String queryReference = siddhiManager.addQuery("from DataStream#transform.nlp:findTokensRegexPattern" +
-                "        ( '([ner: PERSON]+)', text ) \n" +
+                "        ( '(([ner: PERSON]+)|([tag:/NP.*/]))', text ) \n" +
                 "        select *  \n" +
                 "        insert into FindTokensRegexPatternResult;\n");
 
