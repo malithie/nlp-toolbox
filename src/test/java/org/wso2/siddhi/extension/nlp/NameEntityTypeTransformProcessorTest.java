@@ -50,7 +50,7 @@ public class NameEntityTypeTransformProcessorTest extends TestCase {
         InputHandler inputHandler = siddhiManager.defineStream("define stream DataStream ( text string )");
 
         String queryReference = siddhiManager.addQuery("from DataStream#transform.nlp:findNameEntityType" +
-                "        ( 'PERSON', false, text ) \n" +
+                "        ( 'PERSON', true, text ) \n" +
                 "        select *  \n" +
                 "        insert into FindNameEntityTypeResult;\n");
 

@@ -133,7 +133,6 @@ public class NameEntityTypeTransformProcessor extends TransformProcessor {
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
 
         if (groupSuccessiveEntities){
-            List<Event> eventList = new ArrayList<Event>();
             for (CoreMap sentence : sentences) {
                 int previousCount = 0;
                 int count = 0;
@@ -145,9 +144,9 @@ public class NameEntityTypeTransformProcessor extends TransformProcessor {
                     if (entityType.name().equals(token.get(CoreAnnotations.NamedEntityTagAnnotation.class))) {
                         count++;
                         if (previousCount != 0 && (previousCount + 1) == count) {
-                            previousWordIndex = eventList.size() - 1;
-                            String previousWord = (String)eventList.get(previousWordIndex).getData0();
-                            eventList.remove(previousWordIndex);
+                            previousWordIndex = transformedListEvent.getActiveEvents() - 1;
+                            String previousWord = (String)transformedListEvent.getEvent(previousWordIndex).getData0();
+                            transformedListEvent.removeLast();
 
                             previousWord = previousWord.concat(" " + word);
                             Object [] outStreamData = new Object[inStreamData.length + 1];
@@ -169,8 +168,6 @@ public class NameEntityTypeTransformProcessor extends TransformProcessor {
                     }
                 }
             }
-            Event[] events = new Event[eventList.size()];
-            transformedListEvent.setEvents(eventList.toArray(events));
         }else {
             for (CoreMap sentence : sentences) {
                 for (CoreLabel token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
