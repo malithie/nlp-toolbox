@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2005-2010, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *   WSO2 Inc. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ */
+
 package org.wso2.siddhi.extension.nlp;
 
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -33,16 +51,23 @@ import java.util.*;
 public class NameEntityTypeTransformProcessor extends TransformProcessor {
 
     private static Logger logger = Logger.getLogger(NameEntityTypeTransformProcessor.class);
-    private Map<String, Integer> paramPositions = new HashMap<String, Integer>(1);
+
     private Constants.EntityType entityType;
     private boolean groupSuccessiveEntities;
     private StanfordCoreNLP pipeline;
 
     @Override
-    protected void init(Expression[] expressions, List<ExpressionExecutor> expressionExecutors, StreamDefinition streamDefinition, StreamDefinition streamDefinition2, String s, SiddhiContext siddhiContext) {
-        logger.debug("Query Initialized");
+    protected void init(Expression[] expressions, List<ExpressionExecutor> expressionExecutors, StreamDefinition inStreamDefinition, StreamDefinition outStreamDefinition, String elementId, SiddhiContext siddhiContext) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Initializing Query ...");
+        }
 
-        String entityTypeParam = null;
+        if (expressions.length < 3){
+            throw new QueryCreationException("Query expects at least three parameters. Usage: findNameEntityType(entityType:string, " +
+                    "groupSuccessiveEntities:boolean, text:string)");
+        }
+
+        String entityTypeParam;
         try {
             entityTypeParam = ((StringConstant)expressions[0]).getValue();
         } catch (ClassCastException e) {
@@ -64,27 +89,23 @@ public class NameEntityTypeTransformProcessor extends TransformProcessor {
             throw new QueryCreationException("Parameter groupSuccessiveEntities should be of type boolean");
         }
 
-        for (int i=2; i < expressions.length; i++) {
-            if (expressions[i] instanceof Variable) {
-                Variable var = (Variable) expressions[i];
-                String attributeName = var.getAttributeName();
-                paramPositions.put(attributeName, inStreamDefinition.getAttributePosition(attributeName));
-            }
+        if (!(expressions[2] instanceof Variable)){
+            throw new QueryCreationException("Third parameter should be a variable");
         }
 
-        logger.debug(String.format("Query parameters initialized. EntityType: %s GroupSuccessiveEntities %s " +
-                        "Stream Parameters: %s", entityTypeParam, groupSuccessiveEntities,
-                paramPositions.keySet()));
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("Query parameters initialized. EntityType: %s GroupSuccessiveEntities %s " +
+                            "Stream Parameters: %s", entityTypeParam, groupSuccessiveEntities,
+                    inStreamDefinition.getAttributeNameArray()));
+        }
 
         initPipeline();
 
-        // Create outstream
-        if (outStreamDefinition == null) { //WHY DO WE HAVE TO CHECK WHETHER ITS NULL?
+        if (outStreamDefinition == null) {
             this.outStreamDefinition = new StreamDefinition().name("nameEntityTypeMatchStream");
 
             this.outStreamDefinition.attribute("match", Attribute.Type.STRING);
 
-            // Create outstream attributes for all the attributes in the input stream
             for(Attribute strDef : inStreamDefinition.getAttributeList()) {
                 this.outStreamDefinition.attribute(strDef.getName(), strDef.getType());
             }
@@ -93,13 +114,14 @@ public class NameEntityTypeTransformProcessor extends TransformProcessor {
 
     @Override
     protected InStream processEvent(InEvent inEvent) {
-        logger.debug(String.format("Event received. Event Timestamp:%d Entity Type:%s GroupSuccessiveEntities:%s",
-                inEvent.getTimeStamp(), entityType.name(), groupSuccessiveEntities));
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("Event received. Event Timestamp:%d Entity Type:%s GroupSuccessiveEntities:%s",
+                    inEvent.getTimeStamp(), entityType.name(), groupSuccessiveEntities));
+        }
 
         Object [] inStreamData = inEvent.getData();
 
-        Iterator<Map.Entry<String, Integer>> iterator = paramPositions.entrySet().iterator();
-        Annotation document = new Annotation((String)inEvent.getData(paramPositions.get(iterator.next().getKey())));
+        Annotation document = new Annotation((String)inEvent.getData(2));
         pipeline.annotate(document);
 
         InListEvent transformedListEvent = new InListEvent();

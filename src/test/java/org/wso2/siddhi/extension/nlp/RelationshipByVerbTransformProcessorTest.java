@@ -31,17 +31,17 @@ import org.wso2.siddhi.core.util.EventPrinter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TokensRegexPatternTransformProcessorTest extends TestCase {
-    private static Logger logger = Logger.getLogger(TokensRegexPatternTransformProcessorTest.class);
+public class RelationshipByVerbTransformProcessorTest extends TestCase {
+    private static Logger logger = Logger.getLogger(RelationshipByVerbTransformProcessorTest.class);
 
     @Test
-    public void testFindTokensRegexPattern() throws InterruptedException {
-        logger.info("FindTokensRegexPattern Test 1");
+    public void testFindRelationshipByVerb() throws InterruptedException {
+        logger.info("FindRelationshipByVerb Test 1");
 
         SiddhiConfiguration siddhiConfiguration = new SiddhiConfiguration();
 
         List<Class> list = new ArrayList<Class>();
-        list.add(TokensRegexPatternTransformProcessor.class);
+        list.add(RelationshipByVerbTransformProcessor.class);
 
         siddhiConfiguration.setSiddhiExtensions(list);
 
@@ -49,10 +49,10 @@ public class TokensRegexPatternTransformProcessorTest extends TestCase {
 
         InputHandler inputHandler = siddhiManager.defineStream("define stream DataStream ( text string )");
 
-        String queryReference = siddhiManager.addQuery("from DataStream#transform.nlp:findTokensRegexPattern" +
-                "        ( '([ner: PERSON]+)', text ) \n" +
+        String queryReference = siddhiManager.addQuery("from DataStream#transform.nlp:findRelationshipByVerb" +
+                "        ('say', text) \n" +
                 "        select *  \n" +
-                "        insert into FindTokensRegexPatternResult;\n");
+                "        insert into FindRelationshipByVerbResult;\n");
 
         siddhiManager.addCallback(queryReference, new QueryCallback() {
             @Override
@@ -75,5 +75,6 @@ public class TokensRegexPatternTransformProcessorTest extends TestCase {
         siddhiManager.shutdown();
 
     }
+
 
 }

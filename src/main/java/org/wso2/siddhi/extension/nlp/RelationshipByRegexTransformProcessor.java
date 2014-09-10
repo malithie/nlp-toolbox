@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2005-2010, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *   WSO2 Inc. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ */
+
 package org.wso2.siddhi.extension.nlp;
 
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -36,20 +54,24 @@ import java.util.regex.Pattern;
  */
 @SiddhiExtension(namespace = "nlp", function = "findRelationshipByRegex")
 public class RelationshipByRegexTransformProcessor extends TransformProcessor {
-    private static Logger logger = Logger.getLogger(TokensRegexPatternTransformProcessor.class);
 
-    private static final String relationExtractRegex = "(\\s*=\\s*)(\\w+)";
-    private static final String subject = "subject";
-    private static final String object = "object";
-    private static final String verb = "verb";
+    private static Logger logger = Logger.getLogger(RelationshipByRegexTransformProcessor.class);
+//    private static final String validationRegex = "(\\s*=\\s*)(\\w+)";
+    private static final String validationRegex = "(?:[{.*}]\\s*=\\s*)(\\w+)";
 
-    private Map<String, Integer> paramPositions = new HashMap<String, Integer>(1);
     private SemgrexPattern regexPattern;
     private StanfordCoreNLP pipeline;
 
     @Override
-    protected void init(Expression[] expressions, List<ExpressionExecutor> expressionExecutors, StreamDefinition streamDefinition, StreamDefinition streamDefinition2, String s, SiddhiContext siddhiContext) {
-        logger.debug("Query Initialized");
+    protected void init(Expression[] expressions, List<ExpressionExecutor> expressionExecutors, StreamDefinition inStreamDefinition, StreamDefinition outStreamDefinition, String elementId, SiddhiContext siddhiContext) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Initializing Query ...");
+        }
+
+        if (expressions.length < 2){
+            throw new QueryCreationException("Query expects at least two parameters. Usage: findRelationshipByRegex" +
+                    "(regex:string, text:string)");
+        }
 
         String regex;
         try {
@@ -60,25 +82,25 @@ public class RelationshipByRegexTransformProcessor extends TransformProcessor {
         }
 
         List<String> namedNodeList = new ArrayList<String>();
-        Pattern relationExtractRegexPattern = Pattern.compile(relationExtractRegex);
-        Matcher relationExtractRegexMatcher = relationExtractRegexPattern.matcher(regex);
-        while (relationExtractRegexMatcher.find()){
-            namedNodeList.add(relationExtractRegexMatcher.group(2).trim());
+        Pattern validationPattern = Pattern.compile(validationRegex);
+        Matcher validationMatcher = validationPattern.matcher(regex);
+        while (validationMatcher.find()){
+            namedNodeList.add(validationMatcher.group(1).trim());
         }
 
         if (namedNodeList.size() < 3){
             throw new QueryCreationException("Regex should contain 3 named nodes as subject, object and verb");
         }
 
-        if (!namedNodeList.contains(subject)){
+        if (!namedNodeList.contains(Constants.subject)){
             throw new QueryCreationException("Regex should contain a named node as subject");
         }
 
-        if (!namedNodeList.contains(object)){
+        if (!namedNodeList.contains(Constants.object)){
             throw new QueryCreationException("Regex should contain a named node as object");
         }
 
-        if (!namedNodeList.contains(verb)){
+        if (!namedNodeList.contains(Constants.verb)){
             throw new QueryCreationException("Regex should contain a named node as verb");
         }
 
@@ -89,28 +111,24 @@ public class RelationshipByRegexTransformProcessor extends TransformProcessor {
             throw new QueryCreationException("Cannot parse given regex");
         }
 
-        for (int i=1; i < expressions.length; i++) {
-            if (expressions[i] instanceof Variable) {
-                Variable var = (Variable) expressions[i];
-                String attributeName = var.getAttributeName();
-                paramPositions.put(attributeName, inStreamDefinition.getAttributePosition(attributeName));
-            }
+        if (!(expressions[1] instanceof Variable)){
+            throw new QueryCreationException("Second parameter should be a variable");
         }
 
-        logger.debug(String.format("Query parameters initialized. Regex: %s Stream Parameters: %s", regex,
-                paramPositions.keySet()));
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("Query parameters initialized. Regex: %s Stream Parameters: %s", regex,
+                    inStreamDefinition.getAttributeNameArray()));
+        }
 
         initPipeline();
 
-        // Create outstream
-        if (outStreamDefinition == null) { //WHY DO WE HAVE TO CHECK WHETHER ITS NULL?
-            this.outStreamDefinition = new StreamDefinition().name("semgrexPatternMatchStream");
+        if (outStreamDefinition == null) {
+            this.outStreamDefinition = new StreamDefinition().name("relationshipByRegexMatchStream");
 
-            this.outStreamDefinition.attribute(subject, Attribute.Type.STRING);
-            this.outStreamDefinition.attribute(object, Attribute.Type.STRING);
-            this.outStreamDefinition.attribute(verb, Attribute.Type.STRING);
+            this.outStreamDefinition.attribute(Constants.subject, Attribute.Type.STRING);
+            this.outStreamDefinition.attribute(Constants.object, Attribute.Type.STRING);
+            this.outStreamDefinition.attribute(Constants.verb, Attribute.Type.STRING);
 
-            // Create outstream attributes for all the attributes in the input stream
             for(Attribute strDef : inStreamDefinition.getAttributeList()) {
                 this.outStreamDefinition.attribute(strDef.getName(), strDef.getType());
             }
@@ -119,15 +137,16 @@ public class RelationshipByRegexTransformProcessor extends TransformProcessor {
 
     @Override
     protected InStream processEvent(InEvent inEvent) {
-        logger.debug(String.format("Event received. Event Timestamp:%d Regex:%s",inEvent.getTimeStamp(),
-                regexPattern.pattern()));
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("Event received. Event Timestamp:%d Regex:%s",inEvent.getTimeStamp(),
+                    regexPattern.pattern()));
+        }
 
         Object [] inStreamData = inEvent.getData();
 
-        SemgrexMatcher matcher = null;
+        SemgrexMatcher matcher;
 
-        Iterator<Map.Entry<String, Integer>> iterator = paramPositions.entrySet().iterator();
-        Annotation document = pipeline.process((String)inEvent.getData(paramPositions.get(iterator.next().getKey())));
+        Annotation document = pipeline.process((String)inEvent.getData(1));
 
         InListEvent transformedListEvent = new InListEvent();
 
@@ -137,9 +156,12 @@ public class RelationshipByRegexTransformProcessor extends TransformProcessor {
 
             while(matcher.find()){
                 Object [] outStreamData = new Object[inStreamData.length + 3];
-                outStreamData[0] = matcher.getNode(subject) == null ? null : matcher.getNode(subject).word();
-                outStreamData[1] = matcher.getNode(object) == null  ? null : matcher.getNode(object).word();
-                outStreamData[2] = matcher.getNode(object) == null  ? null : matcher.getNode(verb).word();
+                outStreamData[0] = matcher.getNode(Constants.subject) == null ? null : matcher.getNode(Constants.subject)
+                        .word();
+                outStreamData[1] = matcher.getNode(Constants.object) == null  ? null : matcher.getNode(Constants.object)
+                        .word();
+                outStreamData[2] = matcher.getNode(Constants.verb) == null  ? null : matcher.getNode(Constants.verb)
+                        .word();
                 System.arraycopy(inStreamData, 0, outStreamData, 3, inStreamData.length);
                 transformedListEvent.addEvent(new InEvent(inEvent.getStreamId(), System.currentTimeMillis(),
                         outStreamData));

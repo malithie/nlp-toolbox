@@ -1,3 +1,21 @@
+/*
+ * Copyright (c) 2005-2010, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ *   WSO2 Inc. licenses this file to you under the Apache License,
+ *   Version 2.0 (the "License"); you may not use this file except
+ *   in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing,
+ *  software distributed under the License is distributed on an
+ *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  KIND, either express or implied.  See the License for the
+ *  specific language governing permissions and limitations
+ *  under the License.
+ */
+
 package org.wso2.siddhi.extension.nlp;
 
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -33,15 +51,22 @@ import java.util.*;
 public class TokensRegexPatternTransformProcessor extends TransformProcessor{
 
     private static Logger logger = Logger.getLogger(TokensRegexPatternTransformProcessor.class);
-    private Map<String, Integer> paramPositions = new HashMap<String, Integer>(1);
-    private String regex;
+
+    private TokenSequencePattern regexPattern;
     private StanfordCoreNLP pipeline;
 
     @Override
     protected void init(Expression[] expressions, List<ExpressionExecutor> expressionExecutors, StreamDefinition inStreamDefinition, StreamDefinition outStreamDefinition, String elementId, SiddhiContext siddhiContext) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Initializing Query ...");
+        }
 
-        logger.debug("Query Initialized");
+        if (expressions.length < 2){
+            throw new QueryCreationException("Query expects at least two parameters. Usage: findTokensRegexPattern" +
+                    "(regex:string, text:string)");
+        }
 
+        String regex;
         try {
             regex = ((StringConstant)expressions[0]).getValue();
         } catch (ClassCastException e) {
@@ -49,27 +74,29 @@ public class TokensRegexPatternTransformProcessor extends TransformProcessor{
             throw new QueryCreationException("Parameter regex should be of type string");
         }
 
-        for (int i=1; i < expressions.length; i++) {
-            if (expressions[i] instanceof Variable) {
-                Variable var = (Variable) expressions[i];
-                String attributeName = var.getAttributeName();
-                paramPositions.put(attributeName, inStreamDefinition.getAttributePosition(attributeName));
-            }
+        try {
+            regexPattern = TokenSequencePattern.compile(regex);
+        } catch (Exception e) {
+            logger.error("Error in parsing token regex pattern",e);
+            throw new QueryCreationException("Cannot parse given regex");
         }
 
-        logger.debug(String.format("Query parameters initialized. Regex: %s Stream Parameters: %s", regex,
-                paramPositions.keySet()));
+        if (!(expressions[1] instanceof Variable)){
+            throw new QueryCreationException("Second parameter should be a variable");
+        }
 
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("Query parameters initialized. Regex: %s Stream Parameters: %s", regex,
+                    inStreamDefinition.getAttributeNameArray()));
+        }
 
         initPipeline();
 
-        // Create outstream
-        if (outStreamDefinition == null) { //WHY DO WE HAVE TO CHECK WHETHER ITS NULL?
+        if (outStreamDefinition == null) {
             this.outStreamDefinition = new StreamDefinition().name("tokensRegexPatternMatchStream");
 
             this.outStreamDefinition.attribute("match", Attribute.Type.STRING);
 
-            // Create outstream attributes for all the attributes in the input stream
             for(Attribute strDef : inStreamDefinition.getAttributeList()) {
                 this.outStreamDefinition.attribute(strDef.getName(), strDef.getType());
             }
@@ -78,20 +105,19 @@ public class TokensRegexPatternTransformProcessor extends TransformProcessor{
 
     @Override
     protected InStream processEvent(InEvent inEvent) {
-        logger.debug(String.format("Event received. Event Timestamp:%d Regex:%s",inEvent.getTimeStamp(), regex));
+        if (logger.isDebugEnabled()) {
+            logger.debug(String.format("Event received. Event Timestamp:%d Regex:%s",inEvent.getTimeStamp(),
+                    regexPattern.pattern()));
+        }
 
         Object [] inStreamData = inEvent.getData();
 
-        TokenSequencePattern pattern = TokenSequencePattern.compile(regex);
-        TokenSequenceMatcher matcher = null;
-
-        Iterator<Map.Entry<String, Integer>> iterator = paramPositions.entrySet().iterator();
-        Annotation document = pipeline.process((String)inEvent.getData(paramPositions.get(iterator.next().getKey())));
+        Annotation document = pipeline.process((String)inEvent.getData(1));
 
         InListEvent transformedListEvent = new InListEvent();
 
         for (CoreMap sentence:document.get(CoreAnnotations.SentencesAnnotation.class)){
-            matcher = pattern.getMatcher(sentence.get(CoreAnnotations.TokensAnnotation.class));
+            TokenSequenceMatcher matcher = regexPattern.getMatcher(sentence.get(CoreAnnotations.TokensAnnotation.class));
 
             while( matcher.find()){
                 Object [] outStreamData = new Object[inStreamData.length + 1];
