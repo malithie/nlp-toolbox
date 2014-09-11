@@ -93,26 +93,26 @@ public class NameEntityTypeViaDictionaryTransformProcessorTest extends NlpTransf
 
     @Test
     public void testFindNameEntityTypePerson() throws Exception{
-        testFindNameEntityTypeViaDictionary("PERSON", "src/test/resources/dictionaryTest.xml","text");
+        testFindNameEntityTypeViaDictionary("PERSON", "src/test/resources/dictionaryTest.xml");
     }
 
     @Test
     public void testFindNameEntityTypeOrganization() throws Exception{
-        testFindNameEntityTypeViaDictionary("ORGANIZATION", "src/test/resources/dictionaryTest.xml","text");
+        testFindNameEntityTypeViaDictionary("ORGANIZATION", "src/test/resources/dictionaryTest.xml");
     }
 
     @Test
     public void testFindNameEntityTypeLocation() throws Exception{
-        testFindNameEntityTypeViaDictionary("LOCATION", "src/test/resources/dictionaryTest.xml","text");
+        testFindNameEntityTypeViaDictionary("LOCATION", "src/test/resources/dictionaryTest.xml");
     }
 
-    private void testFindNameEntityTypeViaDictionary(String entityType, String filePath, String text) throws Exception{
-        logger.info(String.format("Test: EntityType = %s GroupSuccessiveEntities = %b", entityType,
-                text));
+    private void testFindNameEntityTypeViaDictionary(String entityType, String filePath) throws Exception{
+        logger.info(String.format("Test: EntityType = %s", entityType
+                ));
         String query = "from NameEntityTypeViaDictionaryIn#transform.nlp:findNameEntityTypeViaDictionary" +
                 "        ( '%s' , %s, text ) \n" +
                 "        select *  \n" +
-                "        insert into FindNameEntityTypeResult;\n";
+                "        insert into FindNameEntityTypeViaDictionaryResult;\n";
         start = System.currentTimeMillis();
         String queryReference = siddhiManager.addQuery(String.format(query, entityType, filePath));
         end = System.currentTimeMillis();
@@ -130,7 +130,7 @@ public class NameEntityTypeViaDictionaryTransformProcessorTest extends NlpTransf
     }
 
     private void generateEvents() throws Exception{
-        InputHandler inputHandler = siddhiManager.getInputHandler("NameEntityTypeIn");
+        InputHandler inputHandler = siddhiManager.getInputHandler("NameEntityTypeViaDictionaryIn");
         for(String[] dataLine:data) {
             inputHandler.send(new Object[]{dataLine[0], dataLine[1]});
         }

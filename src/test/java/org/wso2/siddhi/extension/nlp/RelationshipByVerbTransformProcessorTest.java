@@ -20,10 +20,12 @@ package org.wso2.siddhi.extension.nlp;
 
 import junit.framework.TestCase;
 import org.apache.log4j.Logger;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.config.SiddhiConfiguration;
 import org.wso2.siddhi.core.event.Event;
+import org.wso2.siddhi.core.exception.QueryCreationException;
 import org.wso2.siddhi.core.query.output.callback.QueryCallback;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.util.EventPrinter;
@@ -31,9 +33,101 @@ import org.wso2.siddhi.core.util.EventPrinter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class RelationshipByVerbTransformProcessorTest extends TestCase {
+public class RelationshipByVerbTransformProcessorTest extends NlpTransformProcessorTest {
     private static Logger logger = Logger.getLogger(RelationshipByVerbTransformProcessorTest.class);
 
+    @Override
+    public void setUpChild() {
+        siddhiManager.defineStream("define stream  RelationshipByVerbIn(regex string, text string )");
+    }
+
+    @Override
+    public List<Class> getExtensionList() {
+        List<Class> extensions = new ArrayList<Class>(1);
+        extensions.add(RelationshipByVerbTransformProcessor.class);
+        return extensions;
+    }
+
+    @Ignore
+    @Test(expected = org.wso2.siddhi.core.exception.QueryCreationException.class)
+    public void testQueryCreationExceptionInvalidNoOfParams() {
+        logger.info("Test: QueryCreationException at Invalid No Of Params");
+        siddhiManager.addQuery("from RelationshipByVerbIn#transform.nlp:findRelationshipByVerb" +
+                "        ( regex,text) \n" +
+                "        select *  \n" +
+                "        insert into FindRelationshipByVerbResult;\n");
+    }
+
+
+    @Ignore
+    @Test(expected = QueryCreationException.class)
+    public void testQueryCreationExceptionRegexNotContainVerb(){
+        logger.info("Test: QueryCreationException at EntityType type mismatch");
+        siddhiManager.addQuery("from RelationshipByVerbIn#transform.nlp:findRelationshipByVerb" +
+                "        ( regex,text) \n" +
+                "        select *  \n" +
+                "        insert into FindRelationshipByVerbResult;\n");
+    }
+
+
+    @Ignore
+    @Test(expected = QueryCreationException.class)
+    public void testQueryCreationExceptionRegexNotContainSubject(){
+        logger.info("Test: QueryCreationException at Invalid file path");
+        siddhiManager.addQuery("from RelationshipByVerbIn#transform.nlp:findRelationshipByVerb" +
+                "        (regex,text) \n" +
+                "        select *  \n" +
+                "        insert into FindRelationshipByVerbResult;\n");
+    }
+
+
+    @Ignore
+    @Test(expected = QueryCreationException.class)
+    public void testQueryCreationExceptionRegexNotContainObject(){
+        logger.info("Test: QueryCreationException at undefined EntityType");
+        siddhiManager.addQuery("from RelationshipByVerbIn#transform.nlp:findRelationshipByVerb" +
+                "        (regex,text) \n" +
+                "        select *  \n" +
+                "        insert into FindRelationshipByVerbResult;\n");
+    }
+
+    @Test
+    public void testRelationshipByRegex() throws Exception{
+        testFindNameEntityTypeViaDictionary("regex");
+    }
+
+
+    private void testFindNameEntityTypeViaDictionary(String regex) throws Exception{
+        logger.info(String.format("Test: EntityType = %s",regex
+        ));
+        String query = "from RelationshipByVerbIn#transform.nlp:findRelationshipByVerb" +
+                "        ( '%s', text ) \n" +
+                "        select *  \n" +
+                "        insert into FindRelationshipByVerbResult;\n";
+        start = System.currentTimeMillis();
+        String queryReference = siddhiManager.addQuery(String.format(query,regex));
+        end = System.currentTimeMillis();
+
+        logger.info(String.format("Time to add query: [%f sec]", ((end - start)/1000f)));
+
+        siddhiManager.addCallback(queryReference, new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+            }
+        });
+
+        generateEvents();
+    }
+
+    private void generateEvents() throws Exception{
+        InputHandler inputHandler = siddhiManager.getInputHandler("RelationshipByVerbIn");
+        for(String[] dataLine:data) {
+            inputHandler.send(new Object[]{dataLine[0], dataLine[1]});
+        }
+    }
+
+/*
     @Test
     public void testFindRelationshipByVerb() throws InterruptedException {
         logger.info("FindRelationshipByVerb Test 1");
@@ -74,7 +168,7 @@ public class RelationshipByVerbTransformProcessorTest extends TestCase {
         Thread.sleep(1000);
         siddhiManager.shutdown();
 
-    }
+    }*/
 
 
 }
