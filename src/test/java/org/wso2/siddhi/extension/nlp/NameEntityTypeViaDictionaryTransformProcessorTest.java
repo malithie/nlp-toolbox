@@ -20,10 +20,12 @@ package org.wso2.siddhi.extension.nlp;
 
 import junit.framework.TestCase;
 import org.apache.log4j.Logger;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.config.SiddhiConfiguration;
 import org.wso2.siddhi.core.event.Event;
+import org.wso2.siddhi.core.exception.QueryCreationException;
 import org.wso2.siddhi.core.query.output.callback.QueryCallback;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.util.EventPrinter;
@@ -31,8 +33,113 @@ import org.wso2.siddhi.core.util.EventPrinter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NameEntityTypeViaDictionaryTransformProcessorTest extends TestCase {
+public class NameEntityTypeViaDictionaryTransformProcessorTest extends NlpTransformProcessorTest {
     private static Logger logger = Logger.getLogger(NameEntityTypeViaDictionaryTransformProcessorTest.class);
+
+    @Override
+    public void setUpChild() {
+        siddhiManager.defineStream("define stream NameEntityTypeViaDictionaryIn (id string, text string )");
+    }
+
+    @Override
+    public List<Class> getExtensionList() {
+        List<Class> extensions = new ArrayList<Class>(1);
+        extensions.add(NameEntityTypeViaDictionaryTransformProcessor.class);
+        return extensions;
+    }
+
+    @Ignore
+    @Test(expected = org.wso2.siddhi.core.exception.QueryCreationException.class)
+    public void testQueryCreationExceptionInvalidNoOfParams() {
+        logger.info("Test: QueryCreationException at Invalid No Of Params");
+        siddhiManager.addQuery("from NameEntityTypeViaDictionaryIn#transform.nlp:findNameEntityTypeViaDictionary" +
+                "        ( 'PERSON','src/test/resources/dictionaryTest.xml',text) \n" +
+                "        select *  \n" +
+                "        insert into FindNameEntityTypeViaDictionaryResult;\n");
+    }
+
+
+    @Ignore
+    @Test(expected = QueryCreationException.class)
+    public void testQueryCreationExceptionTypeMismatchEntityType(){
+        logger.info("Test: QueryCreationException at EntityType type mismatch");
+        siddhiManager.addQuery("from NameEntityTypeViaDictionaryIn#transform.nlp:findNameEntityTypeViaDictionary" +
+                "        ( 'PERSON','src/test/resources/dictionaryTest.xml',text ) \n" +
+                "        select *  \n" +
+                "        insert into FindNameEntityTypeViaDictionaryResult;\n");
+    }
+
+
+    @Ignore
+    @Test(expected = QueryCreationException.class)
+    public void testQueryCreationExceptionInvalidFilePath(){
+        logger.info("Test: QueryCreationException at Invalid file path");
+        siddhiManager.addQuery("from NameEntityTypeViaDictionaryIn#transform.nlp:findNameEntityTypeViaDictionary" +
+                "        ( 'PERSON' , 'src/test/resources/dictionaryTest.xml', text ) \n" +
+                "        select *  \n" +
+                "        insert into FindNameEntityTypeViaDictionaryResult;\n");
+    }
+
+
+    @Ignore
+    @Test(expected = QueryCreationException.class)
+    public void testQueryCreationExceptionUndefinedEntityType(){
+        logger.info("Test: QueryCreationException at undefined EntityType");
+        siddhiManager.addQuery("from NameEntityTypeViaDictionaryIn#transform.nlp:findNameEntityTypeViaDictionary" +
+                "        ( 'DEGREE' , 'src/test/resources/dictionaryTest.xml', text ) \n" +
+                "        select *  \n" +
+                "        insert into FindNameEntityTypeViaDictionaryResult;\n");
+    }
+
+    @Test
+    public void testFindNameEntityTypePerson() throws Exception{
+        testFindNameEntityTypeViaDictionary("PERSON", "src/test/resources/dictionaryTest.xml","text");
+    }
+
+    @Test
+    public void testFindNameEntityTypeOrganization() throws Exception{
+        testFindNameEntityTypeViaDictionary("ORGANIZATION", "src/test/resources/dictionaryTest.xml","text");
+    }
+
+    @Test
+    public void testFindNameEntityTypeLocation() throws Exception{
+        testFindNameEntityTypeViaDictionary("LOCATION", "src/test/resources/dictionaryTest.xml","text");
+    }
+
+    private void testFindNameEntityTypeViaDictionary(String entityType, String filePath, String text) throws Exception{
+        logger.info(String.format("Test: EntityType = %s GroupSuccessiveEntities = %b", entityType,
+                text));
+        String query = "from NameEntityTypeViaDictionaryIn#transform.nlp:findNameEntityTypeViaDictionary" +
+                "        ( '%s' , %s, text ) \n" +
+                "        select *  \n" +
+                "        insert into FindNameEntityTypeResult;\n";
+        start = System.currentTimeMillis();
+        String queryReference = siddhiManager.addQuery(String.format(query, entityType, filePath));
+        end = System.currentTimeMillis();
+
+        logger.info(String.format("Time to add query: [%f sec]", ((end - start)/1000f)));
+
+        siddhiManager.addCallback(queryReference, new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+            }
+        });
+
+        generateEvents();
+    }
+
+    private void generateEvents() throws Exception{
+        InputHandler inputHandler = siddhiManager.getInputHandler("NameEntityTypeIn");
+        for(String[] dataLine:data) {
+            inputHandler.send(new Object[]{dataLine[0], dataLine[1]});
+        }
+    }
+
+
+
+
+/*
 
     @Test
     public void testFindNameEntityTypeViaDictionary() throws InterruptedException {
@@ -75,5 +182,6 @@ public class NameEntityTypeViaDictionaryTransformProcessorTest extends TestCase 
         siddhiManager.shutdown();
 
     }
+*/
 
 }
