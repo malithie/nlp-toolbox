@@ -18,12 +18,11 @@
 
 package org.wso2.siddhi.extension.nlp;
 
-import junit.framework.TestCase;
 import org.apache.log4j.Logger;
+import org.junit.Ignore;
 import org.junit.Test;
-import org.wso2.siddhi.core.SiddhiManager;
-import org.wso2.siddhi.core.config.SiddhiConfiguration;
 import org.wso2.siddhi.core.event.Event;
+import org.wso2.siddhi.core.exception.QueryCreationException;
 import org.wso2.siddhi.core.query.output.callback.QueryCallback;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.util.EventPrinter;
@@ -31,10 +30,110 @@ import org.wso2.siddhi.core.util.EventPrinter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class NameEntityTypeTransformProcessorTest extends TestCase {
+public class NameEntityTypeTransformProcessorTest extends NlpTransformProcessorTest {
     private static Logger logger = Logger.getLogger(NameEntityTypeViaDictionaryTransformProcessorTest.class);
 
+    @Override
+    public void setUpChild() {
+        siddhiManager.defineStream("define stream NameEntityTypeIn (id string, text string )");
+    }
+
+    @Override
+    public List<Class> getExtensionList() {
+        List<Class> extensions = new ArrayList<Class>(1);
+        extensions.add(NameEntityTypeTransformProcessor.class);
+        return extensions;
+    }
+
+    @Ignore
+    @Test(expected = org.wso2.siddhi.core.exception.QueryCreationException.class)
+    public void testQueryCreationExceptionInvalidNoOfParams() {
+        logger.info("Test: QueryCreationException at Invalid No Of Params");
+        siddhiManager.addQuery("from NameEntityTypeIn#transform.nlp:findNameEntityType" +
+                "        ( 'PERSON', text ) \n" +
+                "        select *  \n" +
+                "        insert into FindNameEntityTypeResult;\n");
+    }
+
+
+    @Ignore
+    @Test(expected = QueryCreationException.class)
+    public void testQueryCreationExceptionTypeMismatchEntityType(){
+        logger.info("Test: QueryCreationException at EntityType type mismatch");
+        siddhiManager.addQuery("from NameEntityTypeIn#transform.nlp:findNameEntityType" +
+                "        ( 124 , false, text ) \n" +
+                "        select *  \n" +
+                "        insert into FindNameEntityTypeResult;\n");
+    }
+
+
+    @Ignore
+    @Test(expected = QueryCreationException.class)
+    public void testQueryCreationExceptionTypeMismatchGroupSuccessiveEntities(){
+        logger.info("Test: QueryCreationException at GroupSuccessiveEntities type mismatch");
+        siddhiManager.addQuery("from NameEntityTypeIn#transform.nlp:findNameEntityType" +
+                "        ( 'PERSON' , 'false', text ) \n" +
+                "        select *  \n" +
+                "        insert into FindNameEntityTypeResult;\n");
+    }
+
+
+    @Ignore
+    @Test(expected = QueryCreationException.class)
+    public void testQueryCreationExceptionUndefinedEntityType(){
+        logger.info("Test: QueryCreationException at undefined EntityType");
+        siddhiManager.addQuery("from NameEntityTypeIn#transform.nlp:findNameEntityType" +
+                "        ( 'DEGREE' , false, text ) \n" +
+                "        select *  \n" +
+                "        insert into FindNameEntityTypeResult;\n");
+    }
+
     @Test
+    public void testFindNameEntityTypePerson() throws Exception{
+        testFindNameEntityType("person", false);
+    }
+
+    @Test
+    public void testFindNameEntityTypeOrganization() throws Exception{
+        testFindNameEntityType("ORGANIZATION", false);
+    }
+
+    @Test
+    public void testFindNameEntityTypeLocation() throws Exception{
+        testFindNameEntityType("LOCATION", false);
+    }
+
+    private void testFindNameEntityType(String entityType, boolean groupSuccessiveEntities) throws Exception{
+        logger.info(String.format("Test: EntityType = %s GroupSuccessiveEntities = %b", entityType,
+                groupSuccessiveEntities));
+        String query = "from NameEntityTypeIn#transform.nlp:findNameEntityType" +
+                "        ( '%s' , %b, text ) \n" +
+                "        select *  \n" +
+                "        insert into FindNameEntityTypeResult;\n";
+        start = System.currentTimeMillis();
+        String queryReference = siddhiManager.addQuery(String.format(query, entityType, groupSuccessiveEntities));
+        end = System.currentTimeMillis();
+
+        logger.info(String.format("Time to add query: [%f sec]", ((end - start)/1000f)));
+
+        siddhiManager.addCallback(queryReference, new QueryCallback() {
+            @Override
+            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                EventPrinter.print(timeStamp, inEvents, removeEvents);
+            }
+        });
+
+         generateEvents();
+    }
+
+    private void generateEvents() throws Exception{
+        InputHandler inputHandler = siddhiManager.getInputHandler("NameEntityTypeIn");
+        for(String[] dataLine:data) {
+            inputHandler.send(new Object[]{dataLine[0], dataLine[1]});
+        }
+    }
+
+    /*@Test
     public void testFindNameEntityType() throws InterruptedException {
         logger.info("FindNameEntityType Test 1");
 
@@ -61,6 +160,7 @@ public class NameEntityTypeTransformProcessorTest extends TestCase {
             }
         });
 
+
         inputHandler.send(new Object[]{"Midfield High School students and fans alike were surprised when Coach Bill Addison submitted his resignation on Thursday."});
         inputHandler.send(new Object[]{"While this announcement was made following the end of a 4-6 season record—the Tigers’ first losing season in over 20 years—the school board maintains that Addison was not asked to resign."});
         inputHandler.send(new Object[]{"“Yeah, he may not have been forced to leave, but you still can’t help but wonder if maybe he saw it coming and wanted to avoid the inevitable,” speculated one fan who wished to remain anonymous."});
@@ -74,6 +174,6 @@ public class NameEntityTypeTransformProcessorTest extends TestCase {
         Thread.sleep(1000);
         siddhiManager.shutdown();
 
-    }
+    }*/
 
 }
