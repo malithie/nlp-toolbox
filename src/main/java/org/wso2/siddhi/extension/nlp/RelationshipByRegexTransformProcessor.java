@@ -95,10 +95,6 @@ public class RelationshipByRegexTransformProcessor extends TransformProcessor {
             namedNodeSet.add(validationMatcher.group(1).trim());
         }
 
-        if (namedNodeSet.size() < 3){
-            throw new QueryCreationException("Regex should contain 3 named nodes as subject, object and verb");
-        }
-
         if (!namedNodeSet.contains(Constants.subject)){
             throw new QueryCreationException("Regex should contain a named node as subject");
         }

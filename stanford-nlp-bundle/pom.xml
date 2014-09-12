@@ -5,11 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>stanford-nlp-bundle</artifactId>
-    <groupId>org.wso2.siddhi.extension.nlp</groupId>
+    <groupId>org.wso2.siddhi.nlp</groupId>
     <packaging>bundle</packaging>
-    <name>Stanford-NLP</name>
-    <version>1.0</version>
-    <description>This bundle exports packages from nlp jar files</description>
+    <name>stanford-nlp.wso2</name>
+    <version>3.4.0-wso2v1</version>
+    <description>
+        This bundle exports packages stanford-corenlp-3.4.jar and stanford-tregex-3.4.1.jar
+    </description>
     <url>http://wso2.org</url>
 
     <dependencies>
@@ -42,15 +44,6 @@
     </dependencies>
 
     <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-install-plugin</artifactId>
-                    <version>2.5.2</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.felix</groupId>
@@ -62,15 +55,13 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Export-Package>
-                            edu.stanford.nlp.*; version="3.4",
+                            edu.stanford.nlp.*;
                         </Export-Package>
                         <Import-Package>
+                            !edu.stanford.nlp.*,
                             *;resolution:=optional
                         </Import-Package>
-                        <DynamicImport-Package>
-                            *
-                        </DynamicImport-Package>
-                        <Embed-Dependency>jollyday,joda-time</Embed-Dependency>
+                        <Embed-Dependency>jollyday|joda-time|runtime;inline=false;</Embed-Dependency>
                     </instructions>
                 </configuration>
             </plugin>

@@ -48,34 +48,29 @@ public class NameEntityTypeViaDictionaryTransformProcessorTest extends NlpTransf
         return extensions;
     }
 
-    @Ignore
     @Test(expected = org.wso2.siddhi.core.exception.QueryCreationException.class)
     public void testQueryCreationExceptionInvalidNoOfParams() {
         logger.info("Test: QueryCreationException at Invalid No Of Params");
         siddhiManager.addQuery("from NameEntityTypeViaDictionaryIn#transform.nlp:findNameEntityTypeViaDictionary" +
-                "        ( 'PERSON','src/test/resources/dictionaryTest.xml',text) \n" +
+                "        ('src/test/resources/dictionaryTest.xml',text) \n" +
                 "        select *  \n" +
                 "        insert into FindNameEntityTypeViaDictionaryResult;\n");
     }
 
-
-    @Ignore
     @Test(expected = QueryCreationException.class)
     public void testQueryCreationExceptionTypeMismatchEntityType(){
         logger.info("Test: QueryCreationException at EntityType type mismatch");
         siddhiManager.addQuery("from NameEntityTypeViaDictionaryIn#transform.nlp:findNameEntityTypeViaDictionary" +
-                "        ( 'PERSON','src/test/resources/dictionaryTest.xml',text ) \n" +
+                "        ( PERSON,'src/test/resources/dictionaryTest.xml',text ) \n" +
                 "        select *  \n" +
                 "        insert into FindNameEntityTypeViaDictionaryResult;\n");
     }
 
-
-    @Ignore
     @Test(expected = QueryCreationException.class)
     public void testQueryCreationExceptionInvalidFilePath(){
         logger.info("Test: QueryCreationException at Invalid file path");
         siddhiManager.addQuery("from NameEntityTypeViaDictionaryIn#transform.nlp:findNameEntityTypeViaDictionary" +
-                "        ( 'PERSON' , 'src/test/resources/dictionaryTest.xml', text ) \n" +
+                "        ( 'PERSON' , 'src/resources/dictionaryTest.xml', text ) \n" +
                 "        select *  \n" +
                 "        insert into FindNameEntityTypeViaDictionaryResult;\n");
     }
@@ -97,11 +92,6 @@ public class NameEntityTypeViaDictionaryTransformProcessorTest extends NlpTransf
     }
 
     @Test
-    public void testFindNameEntityTypeOrganization() throws Exception{
-        testFindNameEntityTypeViaDictionary("ORGANIZATION", "src/test/resources/dictionaryTest.xml");
-    }
-
-    @Test
     public void testFindNameEntityTypeLocation() throws Exception{
         testFindNameEntityTypeViaDictionary("LOCATION", "src/test/resources/dictionaryTest.xml");
     }
@@ -110,7 +100,7 @@ public class NameEntityTypeViaDictionaryTransformProcessorTest extends NlpTransf
         logger.info(String.format("Test: EntityType = %s", entityType
                 ));
         String query = "from NameEntityTypeViaDictionaryIn#transform.nlp:findNameEntityTypeViaDictionary" +
-                "        ( '%s' , %s, text ) \n" +
+                "        ( '%s' , '%s', text ) \n" +
                 "        select *  \n" +
                 "        insert into FindNameEntityTypeViaDictionaryResult;\n";
         start = System.currentTimeMillis();
@@ -122,7 +112,26 @@ public class NameEntityTypeViaDictionaryTransformProcessorTest extends NlpTransf
         siddhiManager.addCallback(queryReference, new QueryCallback() {
             @Override
             public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                System.out.println
+                        ("========================================================================================================================================================================================");
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (Event event:inEvents){
+                    Event[] subEventArray = event.toArray();
+                    if (subEventArray != null){
+                        for (Event subEvent:subEventArray){
+                            System.out.println
+                                    ("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+                            System.out.println("timestamp="+ subEvent.getTimeStamp());
+                            System.out.print("data=[");
+                            for (Object obj: subEvent.getData()){
+                                System.out.print(obj + ",");
+                            }
+                            System.out.println("]");
+                        }
+                    }
+                }
+                System.out.println
+                        ("========================================================================================================================================================================================");
             }
         });
 

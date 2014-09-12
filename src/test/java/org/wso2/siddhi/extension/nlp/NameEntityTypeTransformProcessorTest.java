@@ -45,7 +45,6 @@ public class NameEntityTypeTransformProcessorTest extends NlpTransformProcessorT
         return extensions;
     }
 
-    @Ignore
     @Test(expected = org.wso2.siddhi.core.exception.QueryCreationException.class)
     public void testQueryCreationExceptionInvalidNoOfParams() {
         logger.info("Test: QueryCreationException at Invalid No Of Params");
@@ -55,10 +54,8 @@ public class NameEntityTypeTransformProcessorTest extends NlpTransformProcessorT
                 "        insert into FindNameEntityTypeResult;\n");
     }
 
-
-    @Ignore
     @Test(expected = QueryCreationException.class)
-    public void testQueryCreationExceptionTypeMismatchEntityType(){
+    public void testQueryCreationExceptionEntityTypeTypeMismatch(){
         logger.info("Test: QueryCreationException at EntityType type mismatch");
         siddhiManager.addQuery("from NameEntityTypeIn#transform.nlp:findNameEntityType" +
                 "        ( 124 , false, text ) \n" +
@@ -66,10 +63,8 @@ public class NameEntityTypeTransformProcessorTest extends NlpTransformProcessorT
                 "        insert into FindNameEntityTypeResult;\n");
     }
 
-
-    @Ignore
     @Test(expected = QueryCreationException.class)
-    public void testQueryCreationExceptionTypeMismatchGroupSuccessiveEntities(){
+    public void testQueryCreationExceptionGroupSuccessiveEntitiesTypeMismatch(){
         logger.info("Test: QueryCreationException at GroupSuccessiveEntities type mismatch");
         siddhiManager.addQuery("from NameEntityTypeIn#transform.nlp:findNameEntityType" +
                 "        ( 'PERSON' , 'false', text ) \n" +
@@ -77,8 +72,6 @@ public class NameEntityTypeTransformProcessorTest extends NlpTransformProcessorT
                 "        insert into FindNameEntityTypeResult;\n");
     }
 
-
-    @Ignore
     @Test(expected = QueryCreationException.class)
     public void testQueryCreationExceptionUndefinedEntityType(){
         logger.info("Test: QueryCreationException at undefined EntityType");
@@ -91,16 +84,19 @@ public class NameEntityTypeTransformProcessorTest extends NlpTransformProcessorT
     @Test
     public void testFindNameEntityTypePerson() throws Exception{
         testFindNameEntityType("person", false);
+        testFindNameEntityType("person", true);
     }
 
     @Test
     public void testFindNameEntityTypeOrganization() throws Exception{
         testFindNameEntityType("ORGANIZATION", false);
+        testFindNameEntityType("ORGANIZATION", true);
     }
 
     @Test
     public void testFindNameEntityTypeLocation() throws Exception{
         testFindNameEntityType("LOCATION", false);
+        testFindNameEntityType("LOCATION", true);
     }
 
     private void testFindNameEntityType(String entityType, boolean groupSuccessiveEntities) throws Exception{
@@ -119,8 +115,28 @@ public class NameEntityTypeTransformProcessorTest extends NlpTransformProcessorT
         siddhiManager.addCallback(queryReference, new QueryCallback() {
             @Override
             public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                System.out.println
+                        ("========================================================================================================================================================================================");
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (Event event:inEvents){
+                    Event[] subEventArray = event.toArray();
+                    if (subEventArray != null){
+                        for (Event subEvent:subEventArray){
+                        System.out.println
+                            ("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+                            System.out.println("timestamp="+ subEvent.getTimeStamp());
+                            System.out.print("data=[");
+                            for (Object obj: subEvent.getData()){
+                                System.out.print(obj + ",");
+                            }
+                            System.out.println("]");
+                        }
+                    }
+                }
+                System.out.println
+                        ("========================================================================================================================================================================================");
             }
+
         });
 
          generateEvents();

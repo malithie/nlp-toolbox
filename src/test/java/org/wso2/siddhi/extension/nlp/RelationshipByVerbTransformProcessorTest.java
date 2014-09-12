@@ -53,52 +53,29 @@ public class RelationshipByVerbTransformProcessorTest extends NlpTransformProces
     public void testQueryCreationExceptionInvalidNoOfParams() {
         logger.info("Test: QueryCreationException at Invalid No Of Params");
         siddhiManager.addQuery("from RelationshipByVerbIn#transform.nlp:findRelationshipByVerb" +
-                "        ( regex,text) \n" +
+                "        ( text) \n" +
                 "        select *  \n" +
                 "        insert into FindRelationshipByVerbResult;\n");
     }
 
-
-    @Ignore
     @Test(expected = QueryCreationException.class)
-    public void testQueryCreationExceptionRegexNotContainVerb(){
+    public void testQueryCreationExceptionVerbTypeMismatch(){
         logger.info("Test: QueryCreationException at EntityType type mismatch");
         siddhiManager.addQuery("from RelationshipByVerbIn#transform.nlp:findRelationshipByVerb" +
-                "        ( regex,text) \n" +
-                "        select *  \n" +
-                "        insert into FindRelationshipByVerbResult;\n");
-    }
-
-
-    @Ignore
-    @Test(expected = QueryCreationException.class)
-    public void testQueryCreationExceptionRegexNotContainSubject(){
-        logger.info("Test: QueryCreationException at Invalid file path");
-        siddhiManager.addQuery("from RelationshipByVerbIn#transform.nlp:findRelationshipByVerb" +
-                "        (regex,text) \n" +
-                "        select *  \n" +
-                "        insert into FindRelationshipByVerbResult;\n");
-    }
-
-
-    @Ignore
-    @Test(expected = QueryCreationException.class)
-    public void testQueryCreationExceptionRegexNotContainObject(){
-        logger.info("Test: QueryCreationException at undefined EntityType");
-        siddhiManager.addQuery("from RelationshipByVerbIn#transform.nlp:findRelationshipByVerb" +
-                "        (regex,text) \n" +
+                "        ( 1,text) \n" +
                 "        select *  \n" +
                 "        insert into FindRelationshipByVerbResult;\n");
     }
 
     @Test
-    public void testRelationshipByRegex() throws Exception{
-        testFindNameEntityTypeViaDictionary("regex");
+    public void testRelationshipByVerb() throws Exception{
+
+        testRelationshipByVerb("say");
     }
 
 
-    private void testFindNameEntityTypeViaDictionary(String regex) throws Exception{
-        logger.info(String.format("Test: EntityType = %s",regex
+    private void testRelationshipByVerb(String regex) throws Exception{
+        logger.info(String.format("Test: Verb = %s",regex
         ));
         String query = "from RelationshipByVerbIn#transform.nlp:findRelationshipByVerb" +
                 "        ( '%s', text ) \n" +
@@ -113,7 +90,26 @@ public class RelationshipByVerbTransformProcessorTest extends NlpTransformProces
         siddhiManager.addCallback(queryReference, new QueryCallback() {
             @Override
             public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                System.out.println
+                        ("========================================================================================================================================================================================");
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (Event event:inEvents){
+                    Event[] subEventArray = event.toArray();
+                    if (subEventArray != null){
+                        for (Event subEvent:subEventArray){
+                            System.out.println
+                                    ("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+                            System.out.println("timestamp="+ subEvent.getTimeStamp());
+                            System.out.print("data=[");
+                            for (Object obj: subEvent.getData()){
+                                System.out.print(obj + ",");
+                            }
+                            System.out.println("]");
+                        }
+                    }
+                }
+                System.out.println
+                        ("========================================================================================================================================================================================");
             }
         });
 

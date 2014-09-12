@@ -25,9 +25,9 @@
             <version>2.1.0-wso2v1</version>
         </dependency>
         <dependency>
-            <groupId>org.wso2.siddhi.extension.nlp</groupId>
+            <groupId>org.wso2.siddhi.nlp</groupId>
             <artifactId>stanford-nlp-bundle</artifactId>
-            <version>1.0</version>
+            <version>3.4.0-wso2v1</version>
         </dependency>
         <dependency>
             <groupId>log4j</groupId>
@@ -55,62 +55,5 @@
             <version>4.11</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.10</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.10</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
-
-    <!--<build>
-        <plugins>
-            &lt;!&ndash;<plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <version>2.5.2</version>
-                <executions>
-                    <execution>
-                        <phase>initialize</phase>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <configuration>
-                            <groupId>edu.stanford.nlp</groupId>
-                            <artifactId>stanford-tregex</artifactId>
-                            <version>3.4.1</version>
-                            <packaging>jar</packaging>
-                            <file>${basedir}\lib\stanford-tregex-3.4.1.jar</file>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>&ndash;&gt;
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    &lt;!&ndash;<descriptorRefs>&ndash;&gt;
-                        &lt;!&ndash;<descriptorRef>jar-with-dependencies</descriptorRef>&ndash;&gt;
-                    &lt;!&ndash;</descriptorRefs>&ndash;&gt;
-                    <descriptors>
-                        <descriptor>src/main/assembly/disrtibution.xml</descriptor>
-                    </descriptors>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>simple-command</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>-->
 </project>

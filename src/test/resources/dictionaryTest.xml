@@ -1,27 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <dictionary>
     <entity id="PERSON">
-        <entry>Bill</entry>
+        <entry>Bill Addison</entry>
         <entry>Addison</entry>
+        <entry>Joe</entry>
     </entity>
     <entity id="LOCATION">
         <entry>Mississippi</entry>
-        <entry>Independence Square</entry>
-        <entry>Pettah</entry>
-        <entry>Viharamahadevi Park</entry>
-        <entry>Galle Face</entry>
-    </entity>
-    <entity id="ORGANIZATION">
-        <entry>Wso2</entry>
-        <entry>Nawaloka Hospitals</entry>
-        <entry>Warriors</entry>
-        <entry>University of Colombo</entry>
-        <entry>IFS</entry>
-        <entry>Brandix</entry>
-    </entity>
-    <entity id="MONEY">
-        <entry>Rs.</entry>
-        <entry>LKR</entry>
-        <entry>USD</entry>
+        <entry>Midfield High School</entry>
+        <entry>France</entry>
     </entity>
 </dictionary>

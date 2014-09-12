@@ -54,7 +54,7 @@ public class RelationshipByRegexTransformProcessorTest extends NlpTransformProce
     public void testQueryCreationExceptionInvalidNoOfParams() {
         logger.info("Test: QueryCreationException at Invalid No Of Params");
         siddhiManager.addQuery("from RelationshipByRegexIn#transform.nlp:findRelationshipByRegex" +
-                "        ( regex,text) \n" +
+                "        (text) \n" +
                 "        select *  \n" +
                 "        insert into FindRelationshipByRegexResult;\n");
     }
@@ -63,9 +63,9 @@ public class RelationshipByRegexTransformProcessorTest extends NlpTransformProce
     @Ignore
     @Test(expected = QueryCreationException.class)
     public void testQueryCreationExceptionRegexNotContainVerb(){
-        logger.info("Test: QueryCreationException at EntityType type mismatch");
+        logger.info("Test: QueryCreationException at Regex does not contain Verb");
         siddhiManager.addQuery("from RelationshipByRegexIn#transform.nlp:findRelationshipByRegex" +
-                "        ( regex,text) \n" +
+                "        ( '{} >/nsubj|agent/ {}=subject ?>/dobj/ {}=object',text) \n" +
                 "        select *  \n" +
                 "        insert into FindRelationshipByRegexResult;\n");
     }
@@ -74,9 +74,9 @@ public class RelationshipByRegexTransformProcessorTest extends NlpTransformProce
     @Ignore
     @Test(expected = QueryCreationException.class)
     public void testQueryCreationExceptionRegexNotContainSubject(){
-        logger.info("Test: QueryCreationException at Invalid file path");
+        logger.info("Test: QueryCreationException at Regex does not contain Subject");
         siddhiManager.addQuery("from RelationshipByRegexIn#transform.nlp:findRelationshipByRegex" +
-                "        (regex,text) \n" +
+                "        ('{}=verb >/nsubj|agent/ {} ?>/dobj/ {}=object',text) \n" +
                 "        select *  \n" +
                 "        insert into FindRelationshipByRegexResult;\n");
     }
@@ -85,21 +85,40 @@ public class RelationshipByRegexTransformProcessorTest extends NlpTransformProce
     @Ignore
     @Test(expected = QueryCreationException.class)
     public void testQueryCreationExceptionRegexNotContainObject(){
-        logger.info("Test: QueryCreationException at undefined EntityType");
+        logger.info("Test: QueryCreationException at Regex does not contain Object");
         siddhiManager.addQuery("from RelationshipByRegexIn#transform.nlp:findRelationshipByRegex" +
-                "        (regex,text) \n" +
+                "        ('{}=verb >/nsubj|agent/ {}=subject ?>/dobj/ {}',text) \n" +
+                "        select *  \n" +
+                "        insert into FindRelationshipByRegexResult;\n");
+    }
+
+    @Test(expected = QueryCreationException.class)
+    public void testQueryCreationExceptionCannotParseRegex(){
+        logger.info("Test: QueryCreationException at Regex does not contain Object");
+        siddhiManager.addQuery("from RelationshipByRegexIn#transform.nlp:findRelationshipByRegex" +
+                "        ('{}=verb ??>/nsubj|agent/ {}=subject ?>/dobj/ {}',text) \n" +
+                "        select *  \n" +
+                "        insert into FindRelationshipByRegexResult;\n");
+    }
+
+    @Test(expected = QueryCreationException.class)
+    public void testQueryCreationExceptionRegexTypeMismatch(){
+        logger.info("Test: QueryCreationException at Regex parsing");
+        siddhiManager.addQuery("from RelationshipByRegexIn#transform.nlp:findRelationshipByRegex" +
+                "        ({}=verb >/nsubj|agent/ {}=subject ?>/dobj/ {},text) \n" +
                 "        select *  \n" +
                 "        insert into FindRelationshipByRegexResult;\n");
     }
 
     @Test
     public void testRelationshipByRegex() throws Exception{
-        testFindNameEntityTypeViaDictionary("regex");
+
+        testRelationshipByRegex("{}=verb >/nsubj|agent/ {}=subject ?>/dobj/ {}=object");
     }
 
 
-    private void testFindNameEntityTypeViaDictionary(String regex) throws Exception{
-        logger.info(String.format("Test: EntityType = %s",regex
+    private void testRelationshipByRegex(String regex) throws Exception{
+        logger.info(String.format("Test: Regex = %s",regex
                 ));
         String query = "from RelationshipByRegexIn#transform.nlp:findRelationshipByRegex" +
                 "        ( '%s', text ) \n" +
@@ -114,7 +133,26 @@ public class RelationshipByRegexTransformProcessorTest extends NlpTransformProce
         siddhiManager.addCallback(queryReference, new QueryCallback() {
             @Override
             public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
+                System.out.println
+                        ("========================================================================================================================================================================================");
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
+                for (Event event:inEvents){
+                    Event[] subEventArray = event.toArray();
+                    if (subEventArray != null){
+                        for (Event subEvent:subEventArray){
+                            System.out.println
+                                    ("---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+                            System.out.println("timestamp="+ subEvent.getTimeStamp());
+                            System.out.print("data=[");
+                            for (Object obj: subEvent.getData()){
+                                System.out.print(obj + ",");
+                            }
+                            System.out.println("]");
+                        }
+                    }
+                }
+                System.out.println
+                        ("========================================================================================================================================================================================");
             }
         });
 
