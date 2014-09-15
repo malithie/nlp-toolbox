@@ -94,7 +94,7 @@ public class TokensRegexPatternTransformProcessor extends TransformProcessor{
 
         if (logger.isDebugEnabled()) {
             logger.debug(String.format("Query parameters initialized. Regex: %s Stream Parameters: %s", regex,
-                    inStreamDefinition.getAttributeNameArray()));
+                    inStreamDefinition.getAttributeList()));
         }
 
         initPipeline();

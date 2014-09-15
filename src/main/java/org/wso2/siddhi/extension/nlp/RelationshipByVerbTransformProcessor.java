@@ -138,7 +138,7 @@ public class RelationshipByVerbTransformProcessor extends TransformProcessor {
 
         if (logger.isDebugEnabled()) {
             logger.debug(String.format("Query parameters initialized. Verb: %s Stream Parameters: %s", verb,
-                    inStreamDefinition.getAttributeNameArray()));
+                    inStreamDefinition.getAttributeList()));
         }
 
         initPipeline();

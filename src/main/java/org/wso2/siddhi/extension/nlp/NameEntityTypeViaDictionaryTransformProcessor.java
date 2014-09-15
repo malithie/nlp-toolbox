@@ -102,7 +102,7 @@ public class NameEntityTypeViaDictionaryTransformProcessor extends TransformProc
         if (logger.isDebugEnabled()) {
             logger.debug(String.format("Query parameters initialized. EntityType: %s DictionaryFilePath: %s " +
                             "Stream Parameters: %s", entityTypeParam, dictionaryFilePath,
-                    inStreamDefinition.getAttributeNameArray()));
+                    inStreamDefinition.getAttributeList()));
         }
 
         if (outStreamDefinition == null) {

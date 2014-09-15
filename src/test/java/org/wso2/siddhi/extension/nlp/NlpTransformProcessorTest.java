@@ -18,10 +18,10 @@
 
 package org.wso2.siddhi.extension.nlp;
 
-import junit.framework.TestCase;
 import org.apache.log4j.Logger;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.config.SiddhiConfiguration;
 
@@ -34,22 +34,20 @@ import java.util.List;
 /**
  * Created by malithi on 9/10/14.
  */
-public abstract class NlpTransformProcessorTest extends TestCase {
+public abstract class NlpTransformProcessorTest {
 
     private static Logger logger = Logger.getLogger(NlpTransformProcessorTest.class);
-    protected List<String[]> data;
+
+    protected static SiddhiManager siddhiManager;
+    protected static List<String[]> data;
+
     protected long start;
     protected long end;
 
-    protected SiddhiManager siddhiManager;
-
-
     public abstract void setUpChild();
-    public abstract List<Class> getExtensionList();
 
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeClass
+    public static void setUp() throws Exception {
         logger.info("Reading data");
 
         data = new ArrayList<String[]>();
@@ -59,7 +57,7 @@ public abstract class NlpTransformProcessorTest extends TestCase {
         String line;
         while ((line = bufferedReader.readLine()) != null){
             String[] dataLine = line.split(",",2);
-            this.data.add(dataLine);
+            data.add(dataLine);
         }
 
         inputStream.close();
@@ -69,16 +67,27 @@ public abstract class NlpTransformProcessorTest extends TestCase {
 
         SiddhiConfiguration siddhiConfiguration = new SiddhiConfiguration();
 
-        siddhiConfiguration.setSiddhiExtensions(getExtensionList());
+        List<Class> extensions = new ArrayList<Class>(6);
+        extensions.add(NameEntityTypeTransformProcessor.class);
+        extensions.add(NameEntityTypeViaDictionaryTransformProcessor.class);
+        extensions.add(RelationshipByRegexTransformProcessor.class);
+        extensions.add(RelationshipByVerbTransformProcessor.class);
+        extensions.add(SemgrexPatternTransformProcessor.class);
+        extensions.add(TokensRegexPatternTransformProcessor.class);
+
+        siddhiConfiguration.setSiddhiExtensions(extensions);
 
         siddhiManager = new SiddhiManager(siddhiConfiguration);
 
-        setUpChild();
-
     }
 
-    @After
-    public void tearDown() throws Exception{
+    @Before
+    public void setUpChildren(){
+        setUpChild();
+    }
+
+    @AfterClass
+    public static void tearDown() throws Exception{
         Thread.sleep(1000);
         logger.info("Shutting down Siddhi");
         siddhiManager.shutdown();

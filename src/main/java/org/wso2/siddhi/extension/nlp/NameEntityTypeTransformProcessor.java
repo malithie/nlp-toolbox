@@ -100,7 +100,7 @@ public class NameEntityTypeTransformProcessor extends TransformProcessor {
         if (logger.isDebugEnabled()) {
             logger.debug(String.format("Query parameters initialized. EntityType: %s GroupSuccessiveEntities %s " +
                             "Stream Parameters: %s", entityTypeParam, groupSuccessiveEntities,
-                    inStreamDefinition.getAttributeNameArray()));
+                    inStreamDefinition.getAttributeList()));
         }
 
         initPipeline();
