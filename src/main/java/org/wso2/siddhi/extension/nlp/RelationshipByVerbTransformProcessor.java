@@ -159,7 +159,7 @@ public class RelationshipByVerbTransformProcessor extends TransformProcessor {
     @Override
     protected InStream processEvent(InEvent inEvent) {
         if (logger.isDebugEnabled()) {
-            logger.debug(String.format("Event received. Event Timestamp:%d Verb:%s",inEvent.getTimeStamp(), verb));
+            logger.debug(String.format("Event received. Verb:%s Event:%s", verb, inEvent));
         }
 
         Object [] inStreamData = inEvent.getData();

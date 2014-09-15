@@ -119,8 +119,8 @@ public class NameEntityTypeViaDictionaryTransformProcessor extends TransformProc
     @Override
     protected InStream processEvent(InEvent inEvent) {
         if (logger.isDebugEnabled()) {
-            logger.debug(String.format("Event received. Event Timestamp:%d Entity Type:%s DictionaryFilePath:%s",
-                    inEvent.getTimeStamp(), entityType.name(), dictionary.getXmlFilePath()));
+            logger.debug(String.format("Event received. Entity Type:%s DictionaryFilePath:%s Event:%s",
+                    entityType.name(), dictionary.getXmlFilePath(), inEvent));
         }
 
         Object [] inStreamData = inEvent.getData();

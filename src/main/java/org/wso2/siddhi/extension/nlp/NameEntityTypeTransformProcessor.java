@@ -119,8 +119,8 @@ public class NameEntityTypeTransformProcessor extends TransformProcessor {
     @Override
     protected InStream processEvent(InEvent inEvent) {
         if (logger.isDebugEnabled()) {
-            logger.debug(String.format("Event received. Event Timestamp:%d Entity Type:%s GroupSuccessiveEntities:%s",
-                    inEvent.getTimeStamp(), entityType.name(), groupSuccessiveEntities));
+            logger.debug(String.format("Event received. Entity Type:%s GroupSuccessiveEntities:%s " +
+                            "Event:%s", entityType.name(), groupSuccessiveEntities, inEvent));
         }
 
         Object [] inStreamData = inEvent.getData();

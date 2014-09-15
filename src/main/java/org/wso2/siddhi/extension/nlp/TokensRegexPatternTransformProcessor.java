@@ -118,8 +118,7 @@ public class TokensRegexPatternTransformProcessor extends TransformProcessor{
     @Override
     protected InStream processEvent(InEvent inEvent) {
         if (logger.isDebugEnabled()) {
-            logger.debug(String.format("Event received. Event Timestamp:%d Regex:%s",inEvent.getTimeStamp(),
-                    regexPattern.pattern()));
+            logger.debug(String.format("Event received. Regex:%s Event:%s", regexPattern.pattern(), inEvent));
         }
 
         Object [] inStreamData = inEvent.getData();
