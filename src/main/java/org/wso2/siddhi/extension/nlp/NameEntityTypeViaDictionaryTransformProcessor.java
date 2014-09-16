@@ -45,7 +45,7 @@ import java.util.*;
 @SiddhiExtension(namespace = "nlp", function = "findNameEntityTypeViaDictionary")
 public class NameEntityTypeViaDictionaryTransformProcessor extends TransformProcessor {
 
-    private static Logger logger = Logger.getLogger(NameEntityTypeTransformProcessor.class);
+    private static Logger logger = Logger.getLogger(NameEntityTypeViaDictionaryTransformProcessor.class);
 
     private int inStreamParamPosition;
     private Constants.EntityType entityType;
