@@ -57,6 +57,7 @@ public class NameEntityTypeViaDictionaryTransformProcessor extends TransformProc
             logger.debug("Initializing Query ...");
         }
 
+
         if (expressions.length < 3){
             throw new QueryCreationException("Query expects at least three parameters. Usage: findNameEntityTypeViaDictionary(entityType:string, " +
                     "dictionaryFilePath:string, text:string)");
