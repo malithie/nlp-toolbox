@@ -61,7 +61,7 @@ public class Dictionary {
             throw new RuntimeException("Cannot read the XML file : " + xmlFilePath);
         }
 
-        URL xsdFileUrl= ClassLoader.getSystemResource(xsdFilePath);
+        URL xsdFileUrl= Dictionary.class.getClassLoader().getResource(xsdFilePath);
 
         Schema schema;
         SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);

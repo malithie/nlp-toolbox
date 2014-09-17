@@ -77,7 +77,7 @@ public class NameEntityTypeViaDictionaryTransformProcessorTest extends NlpTransf
 
     @Test
     public void testFindNameEntityTypeLocation() throws Exception{
-        testFindNameEntityTypeViaDictionary("LOCATION", "src/test/resources/dictionaryTest.xml");
+        testFindNameEntityTypeViaDictionary("LOCATION", "/Users/Chanuka/Documents/wso2_products/CEPLatest/wso2cep-4.0.0-SNAPSHOT/repository/resources/dictionary.xml");
     }
 
     private void testFindNameEntityTypeViaDictionary(String entityType, String filePath) throws Exception{
