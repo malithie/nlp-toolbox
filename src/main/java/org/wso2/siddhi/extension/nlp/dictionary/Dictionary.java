@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2010, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2005-2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -61,7 +61,7 @@ public class Dictionary {
             throw new RuntimeException("Cannot read the XML file : " + xmlFilePath);
         }
 
-        URL xsdFileUrl= Dictionary.class.getClassLoader().getResource(xsdFilePath);
+        URL xsdFileUrl= this.getClass().getClassLoader().getResource(xsdFilePath);
 
         Schema schema;
         SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2010, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2005-2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -133,14 +133,14 @@ public class NameEntityTypeTransformProcessor extends TransformProcessor {
         List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
 
         if (groupSuccessiveEntities){
+            int previousCount = 0;
+            int count = 0;
+            int previousWordIndex;
+            String word;
+
             for (CoreMap sentence : sentences) {
-                int previousCount = 0;
-                int count = 0;
-
                 for (CoreLabel token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
-                    String word = token.get(CoreAnnotations.TextAnnotation.class);
-
-                    int previousWordIndex;
+                    word = token.get(CoreAnnotations.TextAnnotation.class);
                     if (entityType.name().equals(token.get(CoreAnnotations.NamedEntityTagAnnotation.class))) {
                         count++;
                         if (previousCount != 0 && (previousCount + 1) == count) {
