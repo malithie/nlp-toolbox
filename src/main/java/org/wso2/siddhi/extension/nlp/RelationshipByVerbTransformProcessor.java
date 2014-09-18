@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2010, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2005-2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  *   WSO2 Inc. licenses this file to you under the Apache License,
  *   Version 2.0 (the "License"); you may not use this file except
@@ -125,8 +125,13 @@ public class RelationshipByVerbTransformProcessor extends TransformProcessor {
             throw new QueryCreationException("Parameter verb should be of type string");
         }
 
-        regexOptSubPattern = SemgrexPattern.compile(String.format(regexOptSub,verb));
-        regexOptObjPattern = SemgrexPattern.compile(String.format(regexOptObj,verb));
+        try {
+            regexOptSubPattern = SemgrexPattern.compile(String.format(regexOptSub,verb));
+            regexOptObjPattern = SemgrexPattern.compile(String.format(regexOptObj,verb));
+        } catch (SemgrexParseException e) {
+            logger.error("Error in initializing relation extracting pattern for verb",e);
+            throw new QueryCreationException("Parameter verb is invalid");
+        }
 
         if (expressions[1] instanceof Variable){
             inStreamParamPosition = inStreamDefinition.getAttributePosition(((Variable)expressions[1])
