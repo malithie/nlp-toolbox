@@ -54,11 +54,7 @@ public class DictionaryHandler extends DefaultHandler {
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         if (qName.equalsIgnoreCase(Constants.DictionaryTag.ENTITY.getTag())){
-            if (attributes.getValue(Constants.DictionaryTag.ID.getTag()).equalsIgnoreCase(entityType.name())){
-                read = true;
-            }else{
-                read = false;
-            }
+            read = attributes.getValue(Constants.DictionaryTag.ID.getTag()).equalsIgnoreCase(entityType.name());
         }
     }
 
