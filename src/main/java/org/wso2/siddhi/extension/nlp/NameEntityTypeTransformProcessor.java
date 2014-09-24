@@ -137,10 +137,12 @@ public class NameEntityTypeTransformProcessor extends TransformProcessor {
             int count = 0;
             int previousWordIndex;
             String word;
+            Object [] outStreamData = null;
 
             for (CoreMap sentence : sentences) {
                 for (CoreLabel token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
                     word = token.get(CoreAnnotations.TextAnnotation.class);
+
                     if (entityType.name().equals(token.get(CoreAnnotations.NamedEntityTagAnnotation.class))) {
                         count++;
                         if (previousCount != 0 && (previousCount + 1) == count) {
@@ -149,13 +151,11 @@ public class NameEntityTypeTransformProcessor extends TransformProcessor {
                             transformedListEvent.removeLast();
 
                             previousWord = previousWord.concat(" " + word);
-                            Object [] outStreamData = new Object[inStreamData.length + 1];
                             outStreamData[0] = previousWord;
-                            System.arraycopy(inStreamData, 0, outStreamData, 1, inStreamData.length);
-                            transformedListEvent.addEvent(new InEvent(inEvent.getStreamId(), System.currentTimeMillis(),
-                                    outStreamData));
+                            transformedListEvent.addEvent(new InEvent(inEvent.getStreamId(), System.currentTimeMillis(),outStreamData));
+
                         } else {
-                            Object [] outStreamData = new Object[inStreamData.length + 1];
+                            outStreamData = new Object[inStreamData.length + 1];
                             outStreamData[0] = word;
                             System.arraycopy(inStreamData, 0, outStreamData, 1, inStreamData.length);
                             transformedListEvent.addEvent(new InEvent(inEvent.getStreamId(), System.currentTimeMillis(),
