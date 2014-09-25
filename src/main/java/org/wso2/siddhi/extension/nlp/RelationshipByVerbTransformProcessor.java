@@ -29,7 +29,6 @@ import edu.stanford.nlp.semgraph.semgrex.SemgrexPattern;
 import edu.stanford.nlp.util.CoreMap;
 import org.apache.log4j.Logger;
 import org.wso2.siddhi.core.config.SiddhiContext;
-import org.wso2.siddhi.core.event.Event;
 import org.wso2.siddhi.core.event.ListEvent;
 import org.wso2.siddhi.core.event.in.InEvent;
 import org.wso2.siddhi.core.event.in.InListEvent;
@@ -46,8 +45,6 @@ import org.wso2.siddhi.query.api.expression.constant.StringConstant;
 import org.wso2.siddhi.query.api.extension.annotation.SiddhiExtension;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Created by malithi on 9/3/14.
@@ -56,7 +53,9 @@ import java.util.regex.Pattern;
 public class RelationshipByVerbTransformProcessor extends TransformProcessor {
 
     private static Logger logger = Logger.getLogger(RelationshipByVerbTransformProcessor.class);
-
+    /**
+     * Used to find subject, object and verb, where subject is optional
+     */
     private static final String regexOptSub = "{lemma:%s}=verb ?>/nsubj|agent|xsubj/ {}=subject " +
             ">/dobj|iobj|nsubjpass/ {}=object";
     private static final String regexOptObj = "{lemma:%s}=verb >/nsubj|agent|xsubj/ {}=subject " +
@@ -87,14 +86,12 @@ public class RelationshipByVerbTransformProcessor extends TransformProcessor {
             if (object != null ? !object.equals(event.object) : event.object != null) {
                 return false;
             }
+
             if (subject != null ? !subject.equals(event.subject) : event.subject != null) {
                 return false;
             }
-            if (!verb.equals(event.verb)) {
-                return false;
-            }
 
-            return true;
+            return verb.equals(event.verb);
         }
 
         @Override
@@ -114,15 +111,18 @@ public class RelationshipByVerbTransformProcessor extends TransformProcessor {
         }
 
         if (expressions.length < 2){
-            throw new QueryCreationException("Query expects at least two parameters. Usage: findRelationshipByVerb" +
-                    "(verb:string, text:string)");
+            throw new QueryCreationException("Query expects at least two parameters. Received only " + expressions
+                    .length + ".\n" +
+                    "Usage: findRelationshipByVerb(verb:string, text:string-variable)");
         }
 
         try {
             verb = ((StringConstant)expressions[0]).getValue();
         } catch (ClassCastException e) {
             logger.error("Error in reading parameter verb",e);
-            throw new QueryCreationException("Parameter verb should be of type string");
+            throw new QueryCreationException("First parameter should be of type string. Found " + Constants.getType
+                    (expressions[0]) + "\n" +
+                    "Usage: findRelationshipByVerb(verb:string, text:string-variable)");
         }
 
         try {
@@ -130,14 +130,17 @@ public class RelationshipByVerbTransformProcessor extends TransformProcessor {
             regexOptObjPattern = SemgrexPattern.compile(String.format(regexOptObj,verb));
         } catch (SemgrexParseException e) {
             logger.error("Error in initializing relation extracting pattern for verb",e);
-            throw new QueryCreationException("Parameter verb is invalid");
+            throw new QueryCreationException("First parameter is not a verb. Found " + verb + "\n" +
+                    "Usage: findRelationshipByVerb(verb:string, text:string-variable)");
         }
 
         if (expressions[1] instanceof Variable){
             inStreamParamPosition = inStreamDefinition.getAttributePosition(((Variable)expressions[1])
                     .getAttributeName());
         }else{
-            throw new QueryCreationException("Second parameter should be a variable");
+            throw new QueryCreationException("Second parameter should be a variable. Found " + Constants.getType
+                    (expressions[1]) + "\n" +
+                    "Usage: findRelationshipByVerb(verb:string, text:string-variable)");
         }
 
 
